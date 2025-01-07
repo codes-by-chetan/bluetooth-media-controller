@@ -1,0 +1,4 @@
+build/*
+bluetooth-media-controller-1.0.0/*
+dist/*
+*.deb

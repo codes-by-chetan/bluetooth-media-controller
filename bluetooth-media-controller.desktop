@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bluetooth Media Controller
+Comment=Control Bluetooth media playback
+Exec=/usr/bin/bluetooth-media-controller
+Icon=/usr/share/icons/bluetooth-media-controller.png
+Terminal=false
+Categories=AudioVideo;Audio;Player;GTK;

@@ -7,6 +7,7 @@ const iconPath = path.join(process.cwd(), 'bluetooth-media-controller.png');
 const appName = 'bluetooth-media-controller';
 const appVersion = '1.0.0';
 
+
 // Check if icon exists
 if (!fs.existsSync(iconPath)) {
   console.error("Error: bluetooth-media-controller.png not found in the current directory.");
@@ -72,11 +73,11 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False,
-          icon='${iconPath}')
+          console=False)
 `;
 
 fs.writeFileSync(`${appName}.spec`, specFile);
+
 
 console.log('Creating .desktop file...');
 const desktopFile = `[Desktop Entry]
@@ -93,24 +94,58 @@ Categories=AudioVideo;Audio;Player;GTK;
 fs.writeFileSync(`${appName}.desktop`, desktopFile);
 
 console.log('Building application...');
-execSync(`${pythonPath} -m PyInstaller --clean ${appName}.spec`);
+try {
+  execSync(`${pythonPath} -m PyInstaller --clean ${appName}.spec`, { stdio: 'inherit' });
+} catch (error) {
+  console.error('Error during PyInstaller build:', error);
+  process.exit(1);
+}
+
 
 console.log('Creating Debian package structure...');
 const debianDir = `${appName}-${appVersion}`;
 execSync(`mkdir -p ${debianDir}/DEBIAN ${debianDir}/usr/bin ${debianDir}/usr/share/applications ${debianDir}/usr/share/icons`);
 
-const controlFile = `Package: ${appName}
-Version: ${appVersion}
+const controlFile = `Package: bluetooth-media-controller
+Version: 1.0.0
 Section: utils
 Priority: optional
 Architecture: amd64
-Depends: libgtk-3-0, libcanberra-gtk-module
-Maintainer: Your Name <your.email@example.com>
+Depends: libgtk-3-0, python3 (>= 3.8), python3-gi, python3-gi-cairo, gir1.2-gtk-3.0, libc6 (>= 2.31), libcanberra-gtk-module | libcanberra-gtk3-module
+Maintainer: Chetan Mohite <chetanmohite2128@gmail.com>
 Description: Bluetooth Media Controller
  A GTK application to control Bluetooth media playback.
 `;
 
 fs.writeFileSync(`${debianDir}/DEBIAN/control`, controlFile);
+
+console.log('Creating postinst script...');
+const postinstScript = `#!/bin/bash
+set -e
+
+# Create necessary directories if they don't exist
+mkdir -p /usr/share/icons
+mkdir -p /usr/share/applications
+
+# Set correct permissions
+chmod 755 /usr/bin/bluetooth-media-controller
+chmod 644 /usr/share/icons/bluetooth-media-controller.png
+chmod 644 /usr/share/applications/bluetooth-media-controller.desktop
+
+# Update icon cache
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t /usr/share/icons || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications || true
+fi
+`;
+
+fs.writeFileSync(`${debianDir}/DEBIAN/postinst`, postinstScript);
+execSync(`chmod 755 ${debianDir}/DEBIAN/postinst`);
+
 
 console.log('Copying files to Debian package structure...');
 execSync(`cp dist/${appName} ${debianDir}/usr/bin/`);
@@ -120,6 +155,23 @@ execSync(`cp ${iconPath} ${debianDir}/usr/share/icons/${appName}.png`);
 console.log('Building Debian package...');
 execSync(`dpkg-deb --build ${debianDir}`);
 
-console.log('Build complete! The .deb package is ready for installation.');
-console.log(`To install the package, run: sudo dpkg -i ${appName}-${appVersion}.deb`);
-console.log('After installation, you may need to run: sudo apt-get install -f');
+console.log('Cleaning up build files...');
+execSync(`rm -rf build dist ${appName}.spec ${debianDir} venv`);
+
+console.log(`
+    Build complete! The .deb package has been created.
+    
+    To ensure compatibility with older systems, it's recommended to build this package on a system with an older GLIBC version, such as Ubuntu 20.04 LTS.
+    
+    To install on the target system:
+    1. First, ensure no other package managers are running.
+    2. Install the package:
+       sudo dpkg -i ${appName}-${appVersion}.deb
+    
+    3. If there are dependency issues:
+       sudo apt-get install -f
+    
+    The application should now be available in your applications menu.
+    
+    If you encounter GLIBC version issues, please rebuild this package on an older system (e.g., Ubuntu 20.04 LTS).
+    `);

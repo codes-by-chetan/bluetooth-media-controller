@@ -1,0 +1,1 @@
+bluetooth-media-controller-1.0.0/usr/bin/bluetooth-media-controller filter=lfs diff=lfs merge=lfs -text

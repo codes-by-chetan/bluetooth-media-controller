@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Clean up only package-specific files
+if [ -f /usr/share/applications/bluetooth-media-controller.desktop ]; then
+    rm -f /usr/share/applications/bluetooth-media-controller.desktop
+fi
+
+exit 0

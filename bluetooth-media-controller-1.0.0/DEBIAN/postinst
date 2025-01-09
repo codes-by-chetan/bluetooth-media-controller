@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+# Set correct permissions for application files
+chmod 755 /usr/bin/bluetooth-media-controller
+chmod 644 /usr/share/icons/bluetooth-media-controller.png
+chmod 644 /usr/share/applications/bluetooth-media-controller.desktop
+chmod 644 /usr/share/doc/bluetooth-media-controller/copyright
+
+# Update desktop database without modifying system configs
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+exit 0

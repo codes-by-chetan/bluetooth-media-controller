@@ -7,6 +7,7 @@ import time
 import requests
 import json
 import html
+import os # Added import for os
 from gi.repository import Gtk, GLib, GdkPixbuf, Gdk
 
 # Path to store the token details in a file
@@ -15,7 +16,8 @@ CACHE_DURATION = 3600  # Cache duration in seconds
 
 def create_window_icon():
     try:
-        with open('bluetooth-media-controller.png', 'rb') as file:
+        icon_path = os.path.join(os.environ.get('SNAP', ''), 'meta', 'gui', 'bluetooth-media-controller.png')
+        with open(icon_path, 'rb') as file:
             icon_bytes = file.read()
         loader = GdkPixbuf.PixbufLoader()
         loader.write(icon_bytes)
@@ -24,6 +26,7 @@ def create_window_icon():
     except Exception as e:
         print("Error in creating icon:", e)
         return None
+
 
 class AlbumArtCache:
     def __init__(self):

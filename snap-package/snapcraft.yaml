@@ -1,0 +1,50 @@
+name: bluetooth-media-controller
+version: '1.0.0'
+summary: Control Bluetooth media playback
+description: |
+  A GTK application to control Bluetooth media playback.
+  Features include:
+   * Media playback controls
+   * Album art display
+   * Shuffle and repeat functionality
+   * Progress tracking
+
+grade: stable
+confinement: strict
+base: core20
+
+apps:
+  bluetooth-media-controller:
+    command: python3 $SNAP/bin/bluetooth_media_controller.py
+    extensions: [gnome-3-38]
+    plugs:
+      - bluez
+      - network
+      - network-bind
+      - home
+      - desktop
+      - desktop-legacy
+      - x11
+      - wayland
+      - unity7
+      - gsettings
+      - pulseaudio
+
+parts:
+  bluetooth-media-controller:
+    plugin: python
+    source: .
+    python-packages:
+      - requests
+    override-build: |
+      craftctl default
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp bluetooth_media_controller.py $SNAPCRAFT_PART_INSTALL/bin/
+    stage-packages:
+      - python3-gi
+      - python3-gi-cairo
+      - gir1.2-gtk-3.0
+      - libcairo2
+      - libglib2.0-0
+      - libpulse0
+
